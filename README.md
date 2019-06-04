@@ -1,14 +1,17 @@
 ICESat2-HackWeek
 ----------------
 
-Tutorials:  
+## Tutorials:  
+
     1. Introduction to HDF5 data files  
     2. Reduction of ICESat-2 data files  
 
-Instructor:  
+## Instructor:  
+
     - Fernando Paolo (paolofer@jpl.nasa.gov)  
 
-Goals:  
+## Goals:  
+
     - Familiarize with HDF5 data model  
     - Familiarize with HDF5 basic tools  
     - Select IS2 files and extract region of interest  
@@ -17,7 +20,8 @@ Goals:
     - Learn simple/generic data parallelization strategy  
     - Make informative plots (Histog, Maps, Time Series)  
 
-Tools/Libraries:    
+## Tools/Libraries:    
+
     - h5py (HDF5 handling)   
     - numpy (numeric routines)  
     - scipy (scientific routines)  
