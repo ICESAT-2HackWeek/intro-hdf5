@@ -1,26 +1,39 @@
 # -*- coding: utf-8 -*-
 """
-"""
+Utility functions for the ICESat2-HackWeek 2019.
 
-import re
-import os
-import sys
-import h5py
-import pyproj
-import argparse
-import numpy as np
+This utils.py module is part of the following tutorials:
+
+    - Intro to HDF5 and ICESat-2 files (by Fernando)
+    - Gridding ICESat-2 data (by Johan)
+
+Jet Propulsion Laboratory
+California Institute of Technology
+
+Fernando Paolo (paolofer@jplnasa.govl)
+Johan Nilsson (johan.nilsson@jpl.nasa.gov)
+
+"""
+#import re
+#import os
+#import sys
+#import h5py
+#import pyproj
+#import numpy as np
 from astropy.time import Time
-from scipy.ndimage import map_coordinates
+#from scipy.ndimage import map_coordinates
+
+'''
 
 try:
     from gdalconst import *
     from osgeo import gdal, osr
 except:
-    print 'Proceeding without GDAL!'
+    print('Proceeding without GDAL!')
 
 # Hide anoying warnings
-#import warnings
-#warnings.filterwarnings('ignore')
+import warnings
+warnings.filterwarnings('ignore')
 
 
 def seg_diff_filter(dh_fit_dx, h_li, tol=2):
@@ -42,13 +55,13 @@ def seg_diff_filter(dh_fit_dx, h_li, tol=2):
 
     return mask
 
+'''
 
-def gps2yr(time):
-    """ Converte from GPS time to decimal years. """
-    time = Time(time, format='gps')
-    time = Time(time, format='decimalyear').value
-    return time
+def gps2dyr(time):
+    """ Converte GPS time to decimal years. """
+    return Time(time, format='gps').decimalyear
 
+'''
 
 def list_files(path, endswith='.h5'):
     """ List files in dir recursively."""
@@ -71,6 +84,7 @@ def transform_coord(proj1, proj2, x, y):
     proj2 = pyproj.Proj("+init=EPSG:"+str(proj2))
     return pyproj.transform(proj1, proj2, x, y)  # convert
 
+'''
 
 def track_type(time, lat, tmax=1):
     """
@@ -88,8 +102,7 @@ def track_type(time, lat, tmax=1):
         
         i_track, = np.where(track == tracks)  # get all pts from seg 
         
-        if len(i_track) < 2:
-            continue
+        if len(i_track) < 2: continue
         
         # Test if lat increases (asc) or decreases (des) w/time
         i_min = time[i_track].argmin()
@@ -97,11 +110,11 @@ def track_type(time, lat, tmax=1):
         lat_diff = lat[i_track][i_max] - lat[i_track][i_min]
         
         # Determine track type
-        if lat_diff > 0:
-            i_asc[i_track] = True
+        if lat_diff > 0:  i_asc[i_track] = True
 
     return i_asc, np.invert(i_asc)  # index vectors
 
+'''
 
 def h5read(ifile, vnames):
     """ Simple HDF5 reader. """
@@ -176,308 +189,4 @@ def interp2d(xd, yd, data, xq, yq, **kwargs):
     
     return zq
 
-
-# Output description of solution
-description = ('Program for reading ICESat ATL06 data.')
-
-# Define command-line arguments
-parser = argparse.ArgumentParser(description=description)
-
-parser.add_argument(
-        'ifiles', metavar='ifile', type=str, nargs='+',
-        help='path for ifile(s) to read (.h5).')
-
-parser.add_argument(
-        'ofiles', metavar='ofile', type=str, nargs='+',
-        help='path for ofile(s) to save (.h5).')
-
-parser.add_argument(
-        '-f', metavar=('fmask'), dest='fmask', type=str, nargs=1,
-        help="name of raster file mask",
-        default=[None],)
-
-parser.add_argument(
-        '-b', metavar=('w','e','s','n'), dest='bbox', type=float, nargs=4,
-        help=('bounding box for geographical region (deg)'),
-        default=[None],)
-
-parser.add_argument(
-        '-n', metavar=('njobs'), dest='njobs', type=int, nargs=1,
-        help="number of cores to use for parallel processing",
-        default=[1],)
-
-parser.add_argument(
-        '-p', metavar=('epsg_num'), dest='proj', type=str, nargs=1,
-        help=('projection: EPSG number (AnIS=3031, GrIS=3413)'),
-        default=['3031'],)
-
-parser.add_argument(
-        '-i', metavar=('index'), dest='index', type=int, nargs=1,
-        help=('provide mission index'),
-        default=[None],)
-
-# Parser argument to variable
-args = parser.parse_args()
-
-# Define parameters 
-ifiles = args.ifiles
-opath = args.ofiles[0]
-bbox = args.bbox
-proj = args.proj[0]
-#index = args.index[0]
-
-# Beam namnes (groups)
-group = ['./gt1l','./gt1r','./gt2l','./gt2r','./gt3l','./gt3r']
-
-
-fmask = args.fmask[0]
-njobs = args.njobs[0]
-
-# Get filelist of data to process
-#ifiles = list_files(ipath,endswith='.h5')
-
-# Beam indicies
-beams = [1, 2, 3, 4, 5, 6]
-
-# Create beam index container
-orb_i = 0
-
-# Raster mask
-if fmask is not None:
-    
-    print('Reading raster mask ....')
-    if fmask.endswith('.tif'):
-        
-        # Read in masking grid
-        (Xm, Ym, Zm, dX, dY, Proj) = tifread(fmask, "A")
-    
-    else:
-        
-        # Read Hdf5 from memory
-        Fmask = h5py.File(fmask, 'r')
-        
-        # Get variables
-        Xm = Fmask['X'][:]
-        Ym = Fmask['Y'][:]
-        Zm = Fmask['Z'][:]
-
-# Loop trough and open files
-def main(ifile, n=''):
-    
-    # Access global variable
-    global orb_i
-
-    # Check if we already processed the file
-    if ifile.endswith('_A.h5') or ifile.endswith('_D.h5'):
-        return
-
-    # Beam flag error
-    flg_read_err = False
-
-    # Loop trough beams
-    for k in range(len(group)):
-    
-        # Load full data into memory (only once)
-        with h5py.File(ifile, 'r') as fi:
-            
-            # Try to read vars
-            try:
-                
-                # Read in varibales of interest (more can be added!)
-                dac  = fi[group[k]+'/land_ice_segments/geophysical/dac'][:]
-                lat  = fi[group[k]+'/land_ice_segments/latitude'][:]
-                lon  = fi[group[k]+'/land_ice_segments/longitude'][:]
-                h_li = fi[group[k]+'/land_ice_segments/h_li'][:]
-                s_li = fi[group[k]+'/land_ice_segments/h_li_sigma'][:]
-                t_dt = fi[group[k]+'/land_ice_segments/delta_time'][:]
-                flag = fi[group[k]+'/land_ice_segments/atl06_quality_summary'][:]
-                s_fg = fi[group[k]+'/land_ice_segments/fit_statistics/signal_selection_source'][:]
-                snr  = fi[group[k]+'/land_ice_segments/fit_statistics/snr_significance'][:]
-                h_rb = fi[group[k]+'/land_ice_segments/fit_statistics/h_robust_sprd'][:]
-                f_sn = fi[group[k]+'/land_ice_segments/geophysical/bsnow_conf'][:]
-                tref = fi['/ancillary_data/atlas_sdp_gps_epoch'][:]
-                rgt  = fi['/orbit_info/rgt'][:]*np.ones(len(lat))
-                dh_fit_dx = fi[group[k]+'/land_ice_segments/fit_statistics/dh_fit_dx'][:]
-                
-                # Tide corrections
-                tide_earth = fi[group[k]+'/land_ice_segments/geophysical/tide_earth'][:]
-                tide_load  = fi[group[k]+'/land_ice_segments/geophysical/tide_load'][:]
-                tide_ocean = fi[group[k]+'/land_ice_segments/geophysical/tide_ocean'][:]
-                tide_pole  = fi[group[k]+'/land_ice_segments/geophysical/tide_pole'][:]
-            
-            except:
-                
-                # Set error flag
-                flg_read_err = True
-                pass
-    
-        # Continue to next beam
-        if flg_read_err: return
-
-        # Remove DAC
-        h_li = h_li + np.float64(dac)     ####### NOTE WE ARE REMOVING DAC FOR R205
-
-        # Make sure its a 64 bit float
-        dh_fit_dx = np.float64(dh_fit_dx)
-
-        # Apply bounding box
-        if bbox[0]:
-        
-            # Extract bounding box
-            (lonmin, lonmax, latmin, latmax) = bbox
-        
-            # Select data inside bounding box
-            ibox = (lon >= lonmin) & (lon <= lonmax) & (lat >= latmin) & (lat <= latmax)
-        
-            # Set mask container
-            i_m  = np.ones(lat.shape)
-        
-        # Raster mask
-        elif fmask is not None:
-
-
-            # Determine projection
-            if proj != '4326':
-        
-                # Reproject coordinates
-                (x, y) = transform_coord('4326', proj, lon, lat)
-        
-            else:
-            
-                # Keep lon/lat
-                x, y = lon, lat
-        
-            # Interpolation of grid to points for masking
-            i_m = interp2d(Xm, Ym, Zm, x.T, y.T, order=1)
-        
-            # Set all NaN's to zero
-            i_m[np.isnan(i_m)] = 0
-
-        else:
-            
-            # Select all boolean
-            ibox = np.ones(lat.shape,dtype=bool)
-            
-            # Set mask container
-            i_m  = np.ones(lat.shape)
-        
-        # Compute segment difference mask
-        mask = seg_diff_filter(dh_fit_dx, h_li, tol=2)
-
-        # Copy original flag
-        q_flag = flag.copy()
-
-        # Quality flag, only keep good data and data inside box
-        # flag = (s_fg == 0) & (s_li < 1) & (h_rb < 1) & (np.abs(h_li) < 10e3) & (i_m > 0)
-        flag = (flag == 0) & (np.abs(h_li) < 10e3) & (i_m > 0) & mask
-
-        # Only keep good data
-        lat, lon, h_li, s_li, t_dt, h_rb, s_fg, snr, q_flag, f_sn, tide_earth, tide_load, tide_ocean, tide_pole, dac,\
-            rgt = lat[flag], lon[flag], h_li[flag],s_li[flag], t_dt[flag], h_rb[flag], s_fg[flag], \
-                snr[flag], q_flag[flag], f_sn[flag], tide_earth[flag], tide_load[flag], \
-                    tide_ocean[flag], tide_pole[flag], dac[flag], rgt[flag]
-
-        # Test for no data
-        if len(h_li) == 0: return
-        
-        # Time in decimal years
-        t_li = gps2yr(t_dt + tref)
-
-        # Time in GPS seconds
-        t_gps = t_dt + tref
-        
-        # Determine track type
-        (i_asc, i_des) = track_type(t_li, lat)
-        
-        # Determine if to use the index
-        if index is not None:
-            
-            # Add unique mission identifier
-            orb_unique = np.char.add(str(index), str(orb_i)).astype('int')
-            
-            # Create orbit number
-            orb = np.full(t_gps.shape, orb_unique)
-        
-        else:
-            
-            # Create orbit number
-            orb = np.full(t_gps.shape, orb_i)
-
-        # Construct output name and path
-        name, ext = os.path.splitext(os.path.basename(ifile))
-        ofile = os.path.join(opath, name +'_'+group[k][2:]+ ext)
-                
-        # Save track as ascending
-        if len(lat[i_asc]) > 1:
-            
-            with h5py.File(ofile.replace('.h5', '_A.h5'), 'w') as fa:
-                
-                # Save ascending vars
-                fa['orbit']      = orb[i_asc][:]
-                fa['lon']        = lon[i_asc][:]
-                fa['lat']        = lat[i_asc][:]
-                fa['h_elv']      = h_li[i_asc][:]
-                fa['s_elv']      = s_li[i_asc][:]
-                fa['t_year']     = t_li[i_asc][:]
-                fa['h_rb']       = h_rb[i_asc][:]
-                fa['s_fg']       = s_fg[i_asc][:]
-                fa['snr']        = snr[i_asc][:]
-                fa['q_flg']      = q_flag[i_asc][:]
-                fa['f_sn']       = f_sn[i_asc][:]
-                fa['t_sec']      = t_gps[i_asc][:]
-                fa['tide_load']  = tide_load[i_asc][:]
-                fa['tide_ocean'] = tide_ocean[i_asc][:]
-                fa['tide_pole']  = tide_pole[i_asc][:]
-                fa['tide_earth'] = tide_earth[i_asc][:]
-                fa['dac']        = dac[i_asc][:]
-                fa['rgt']        = rgt[i_asc][:]
-                
-                ostr = '_A.h5'
-
-        # Save track as desending
-        if len(lat[i_des]) > 1:
-            
-            with h5py.File(ofile.replace('.h5', '_D.h5'), 'w') as fd:
-                
-                # Save descending vars
-                fd['orbit']      = orb[i_des][:]
-                fd['lon']        = lon[i_des][:]
-                fd['lat']        = lat[i_des][:]
-                fd['h_elv']      = h_li[i_des][:]
-                fd['s_li']       = s_li[i_des][:]
-                fd['t_year']     = t_li[i_des][:]
-                fd['h_rb']       = h_rb[i_des][:]
-                fd['s_fg']       = s_fg[i_des][:]
-                fd['snr']        = snr[i_des][:]
-                fd['q_flg']      = q_flag[i_des][:]
-                fd['f_sn']       = f_sn[i_des][:]
-                fd['t_sec']      = t_gps[i_des][:]
-                fd['tide_load']  = tide_load[i_des][:]
-                fd['tide_ocean'] = tide_ocean[i_des][:]
-                fd['tide_pole']  = tide_pole[i_des][:]
-                fd['tide_earth'] = tide_earth[i_des][:]
-                fd['dac']        = dac[i_des][:]
-                fd['rgt']        = rgt[i_des][:]
-                
-                ostr = '_D.h5'
-
-        # Name of file
-        try:
-            print(ofile.replace('.h5', ostr))
-        except:
-            print('Not processed!')
-                
-    # Update orbit number
-    orb_i += 1
-
-# Run main program
-if njobs == 1:
-    
-    print('running sequential processing ...')
-    [main(f) for f in ifiles]
-
-else:
-    
-    print('running parallel processing (%d jobs) ...' % njobs)
-    from joblib import Parallel, delayed
-    Parallel(n_jobs=njobs, verbose=5)(delayed(main)(f, n) for n, f in enumerate(ifiles))
+'''

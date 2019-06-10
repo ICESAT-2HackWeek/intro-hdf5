@@ -1,30 +1,27 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
+Created on Thu Apr 26 14:58:17 2018
+
+@author: nilssonj
 """
 
 import re
-import os
 import sys
-import h5py
+import os
 import pyproj
+#import warnings
 import argparse
+#warnings.filterwarnings('ignore')
+import h5py
 import numpy as np
 from astropy.time import Time
+#from gdalconst import *
+#from osgeo import gdal, osr
 from scipy.ndimage import map_coordinates
 
-try:
-    from gdalconst import *
-    from osgeo import gdal, osr
-except:
-    print 'Proceeding without GDAL!'
+def segDifferenceFilter(dh_fit_dx, h_li, tol=2):
 
-# Hide anoying warnings
-#import warnings
-#warnings.filterwarnings('ignore')
-
-
-def seg_diff_filter(dh_fit_dx, h_li, tol=2):
-    """ Filter segments by consecutive difference. """
     dAT=20.
     
     if h_li.shape[0] < 3:
@@ -42,13 +39,12 @@ def seg_diff_filter(dh_fit_dx, h_li, tol=2):
 
     return mask
 
-
-def gps2yr(time):
+def gps2dyr(time):
     """ Converte from GPS time to decimal years. """
     time = Time(time, format='gps')
     time = Time(time, format='decimalyear').value
-    return time
 
+    return time
 
 def list_files(path, endswith='.h5'):
     """ List files in dir recursively."""
@@ -56,38 +52,40 @@ def list_files(path, endswith='.h5'):
             for dpath, dnames, fnames in os.walk(path)
             for f in fnames if f.endswith(endswith)]
 
-
 def transform_coord(proj1, proj2, x, y):
-    """
-    Transform coordinates from proj1 to proj2 (EPSG num).
-
-    Example EPSG projs:
-        Geodetic (lon/lat): 4326
-        Polar Stereo AnIS (x/y): 3031
-        Polar Stereo GrIS (x/y): 3413
-    """
+    """Transform coordinates from proj1 to proj2 (EPSG num)."""
+    
     # Set full EPSG projection strings
-    proj1 = pyproj.Proj("+init=EPSG:"+str(proj1))
-    proj2 = pyproj.Proj("+init=EPSG:"+str(proj2))
-    return pyproj.transform(proj1, proj2, x, y)  # convert
+    proj1 = pyproj.Proj("+init=EPSG:"+proj1)
+    proj2 = pyproj.Proj("+init=EPSG:"+proj2)
+    
+    # Convert coordinates
+    return pyproj.transform(proj1, proj2, x, y)
 
 
 def track_type(time, lat, tmax=1):
     """
-    Separate tracks into ascending and descending.
-
-    Defines tracks as segments with time breaks > tmax,
-    and tests whether lat increases or decreases w/time.
+        Determines ascending and descending tracks.
+        Defines unique tracks as segments with time breaks > tmax,
+        and tests whether lat increases or decreases w/time.
     """
-    tracks = np.zeros(lat.shape)  # generate track segment
-    tracks[0:np.argmax(np.abs(lat))] = 1  # set values for segment
-    i_asc = np.zeros(tracks.shape, dtype=bool)  # output index array
     
-    # Loop trough individual secments
+    # Generate track segment
+    tracks = np.zeros(lat.shape)
+    
+    # Set values for segment
+    tracks[0:np.argmax(np.abs(lat))] = 1
+    
+    # Output index array
+    i_asc = np.zeros(tracks.shape, dtype=bool)
+    
+    # Loop trough individual tracks
     for track in np.unique(tracks):
         
-        i_track, = np.where(track == tracks)  # get all pts from seg 
+        # Get all points from an individual track
+        i_track, = np.where(track == tracks)
         
+        # Test tracks length
         if len(i_track) < 2:
             continue
         
@@ -100,60 +98,65 @@ def track_type(time, lat, tmax=1):
         if lat_diff > 0:
             i_asc[i_track] = True
 
-    return i_asc, np.invert(i_asc)  # index vectors
+    # Output index vector's
+    return i_asc, np.invert(i_asc)
 
 
-def h5read(ifile, vnames):
-    """ Simple HDF5 reader. """
-    with h5py.File(ifile, 'r') as f:
-        return [f[v][:] for v in vnames]
-
-
-def ncread(ifile, vnames):
-    """ Simple NetCDF4 reader. """
-    ds = Dataset(ifile, "r")   # NetCDF4
-    d = ds.variables
-    return [d[v][:] for v in vnames]
-
-
-def tifread(ifile, metaData):
-    """ Simple GeoTIFF reader. """
+def geotiffread(ifile,metaData):
+    """Read raster from file."""
+    
     file = gdal.Open(ifile, GA_ReadOnly)
+    
     projection = file.GetProjection()
     src = osr.SpatialReference()
     src.ImportFromWkt(projection)
     proj = src.ExportToWkt()
+    
     Nx = file.RasterXSize
     Ny = file.RasterYSize
+    
     trans = file.GetGeoTransform()
+    
     dx = trans[1]
     dy = trans[5]
+    
     if metaData == "A":
+        
         xp = np.arange(Nx)
         yp = np.arange(Ny)
+        
         (Xp, Yp) = np.meshgrid(xp,yp)
+        
         X = trans[0] + (Xp+0.5)*trans[1] + (Yp+0.5)*trans[2]  #FIXME: bottleneck!
         Y = trans[3] + (Xp+0.5)*trans[4] + (Yp+0.5)*trans[5]
+    
     if metaData == "P":
+        
         xp = np.arange(Nx)
         yp = np.arange(Ny)
+        
         (Xp, Yp) = np.meshgrid(xp,yp)
+        
         X = trans[0] + Xp*trans[1] + Yp*trans[2]  #FIXME: bottleneck!
         Y = trans[3] + Xp*trans[4] + Yp*trans[5]
+
     band = file.GetRasterBand(1)
+
     Z = band.ReadAsArray()
+    
     dx = np.abs(dx)
     dy = np.abs(dy)
-    #return X, Y, Z, dx, dy, proj
-    return X, Y, Z
+    
+    return X, Y, Z, dx, dy, proj
 
 
-def interp2d(xd, yd, data, xq, yq, **kwargs):
-    """ Bilinear interpolation from grid. """
+def bilinear2d(xd,yd,data,xq,yq, **kwargs):
+    """Bilinear interpolation from grid."""
     
     xd = np.flipud(xd)
     yd = np.flipud(yd)
     data = np.flipud(data)
+    
     xd = xd[0,:]
     yd = yd[:,0]
     
@@ -172,6 +175,7 @@ def interp2d(xd, yd, data, xq, yq, **kwargs):
     yp = (yq-yd[0])*(ny-1)/(yd[-1]-yd[0])
     
     coord = np.vstack([yp,xp])
+    
     zq = map_coordinates(data, coord, **kwargs)
     
     return zq
@@ -216,31 +220,38 @@ parser.add_argument(
         help=('provide mission index'),
         default=[None],)
 
+parser.add_argument(
+        '-g', metavar=('granual'), dest='granual', type=str, nargs='+',
+        help='only select specific granuals',
+        default=[None],)
+
 # Parser argument to variable
 args = parser.parse_args()
 
-# Define parameters 
+# Read input from terminal
 ifiles = args.ifiles
-opath = args.ofiles[0]
-bbox = args.bbox
-proj = args.proj[0]
-#index = args.index[0]
-
-# Beam namnes (groups)
-group = ['./gt1l','./gt1r','./gt2l','./gt2r','./gt3l','./gt3r']
-
-
-fmask = args.fmask[0]
-njobs = args.njobs[0]
+opath  = args.ofiles[0]
+bbox   = args.bbox
+njobs  = args.njobs[0]
+fmask  = args.fmask[0]
+proj   = args.proj[0]
+index  = args.index[0]
+gran   = args.granual
 
 # Get filelist of data to process
 #ifiles = list_files(ipath,endswith='.h5')
+
+# Beam namnes
+group = ['./gt1l','./gt1r','./gt2l','./gt2r','./gt3l','./gt3r']
 
 # Beam indicies
 beams = [1, 2, 3, 4, 5, 6]
 
 # Create beam index container
 orb_i = 0
+
+# Select the granuals
+gran = np.asarray(gran).astype(int)
 
 # Raster mask
 if fmask is not None:
@@ -249,7 +260,7 @@ if fmask is not None:
     if fmask.endswith('.tif'):
         
         # Read in masking grid
-        (Xm, Ym, Zm, dX, dY, Proj) = tifread(fmask, "A")
+        (Xm, Ym, Zm, dX, dY, Proj) = geotiffread(fmask, "A")
     
     else:
         
@@ -263,6 +274,15 @@ if fmask is not None:
 
 # Loop trough and open files
 def main(ifile, n=''):
+    
+    gran_str = ifile.split('_')[-3]
+    
+    n_str = len(gran_str)
+    
+    gran_num = int(gran_str[-2:n_str])
+    
+    if np.all(gran_num != gran):
+        return
     
     # Access global variable
     global orb_i
@@ -315,7 +335,7 @@ def main(ifile, n=''):
         if flg_read_err: return
 
         # Remove DAC
-        h_li = h_li + np.float64(dac)     ####### NOTE WE ARE REMOVING DAC FOR R205
+        #h_li = h_li + np.float64(dac)     ####### NOTE WE ARE REMOVING DAC FOR R205
 
         # Make sure its a 64 bit float
         dh_fit_dx = np.float64(dh_fit_dx)
@@ -348,7 +368,7 @@ def main(ifile, n=''):
                 x, y = lon, lat
         
             # Interpolation of grid to points for masking
-            i_m = interp2d(Xm, Ym, Zm, x.T, y.T, order=1)
+            i_m = bilinear2d(Xm, Ym, Zm, x.T, y.T, order=1)
         
             # Set all NaN's to zero
             i_m[np.isnan(i_m)] = 0
@@ -362,7 +382,7 @@ def main(ifile, n=''):
             i_m  = np.ones(lat.shape)
         
         # Compute segment difference mask
-        mask = seg_diff_filter(dh_fit_dx, h_li, tol=2)
+        mask = segDifferenceFilter(dh_fit_dx, h_li, tol=2)
 
         # Copy original flag
         q_flag = flag.copy()
@@ -381,7 +401,7 @@ def main(ifile, n=''):
         if len(h_li) == 0: return
         
         # Time in decimal years
-        t_li = gps2yr(t_dt + tref)
+        t_li = gps2dyr(t_dt + tref)
 
         # Time in GPS seconds
         t_gps = t_dt + tref
@@ -467,8 +487,8 @@ def main(ifile, n=''):
         except:
             print('Not processed!')
                 
-    # Update orbit number
-    orb_i += 1
+        # Update orbit number
+        orb_i += 1
 
 # Run main program
 if njobs == 1:
