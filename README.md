@@ -1,9 +1,9 @@
-ICESat2-HackWeek
-----------------
+Intro to HDF5 and ICESat-2 Files
+--------------------------------
 
 ## Tutorials:  
 
-1. Introduction to HDF5 data files  
+1. Introduction to HDF5 data model
 2. Reduction of ICESat-2 data files  
 
 ## Instructor:  
@@ -20,7 +20,7 @@ ICESat2-HackWeek
 - Learn simple/generic data parallelization strategy  
 - Make informative plots (Histog, Maps, Time Series)  
 
-## Tools/Libraries:    
+## Libraries:    
 
 - h5py (HDF5 handling)   
 - numpy (numeric routines)  
