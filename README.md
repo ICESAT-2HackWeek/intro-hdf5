@@ -1,20 +1,18 @@
-Intro to HDF5 and ICESat-2 Files
---------------------------------
+Intro to HDF5 and ICESat-2 Data Files
+-------------------------------------
+
+Instructor: Fernando Paolo (paolofer@jpl.nasa.gov)  
 
 ## Tutorials:  
 
-1. Introduction to HDF5 data model
-2. Reduction of ICESat-2 data files  
-
-## Instructor:  
-
-- Fernando Paolo (paolofer@jpl.nasa.gov)  
+Part 1: Introduction to HDF5 data model
+Part 2: Reduction of ICESat-2 data files  
 
 ## Goals:  
 
 - Familiarize with HDF5 data model  
 - Familiarize with HDF5 basic tools  
-- Select IS2 files and extract region of interest  
+- Select IS2 files according region of interest  
 - Extract variables of interest and filter in time and space  
 - Prepare data for large-scale processing  
 - Learn simple/generic data parallelization strategy  
