@@ -5,7 +5,7 @@ Instructor: Fernando Paolo (paolofer@jpl.nasa.gov)
 
 ## Tutorials:  
 
-Part 1: Introduction to HDF5 data model
+Part 1: Introduction to HDF5 data model  
 Part 2: Reduction of ICESat-2 data files  
 
 ## Goals:  
