@@ -16,7 +16,7 @@ Part 2: Reduction of ICESat-2 data files
 - Extract variables of interest and filter in time and space  
 - Prepare data for large-scale processing  
 - Learn simple/generic data parallelization strategy  
-- Make informative plots (Histog, Maps, Time Series)  
+- Inspect data files with plots (Histog, Maps, Time Series)  
 
 ## Libraries:    
 
