@@ -2,6 +2,7 @@ Intro to HDF5 and ICESat-2 Data Files
 -------------------------------------
 
 Instructor: Fernando Paolo (paolofer@jpl.nasa.gov)  
+Institution: NASA-JPL/Caltech
 
 ## Tutorials:  
 
@@ -28,3 +29,7 @@ Part 2: Reduction of ICESat-2 data files
 - argparse (arguments parsing)  
 - glob (pathname pattern expansion)  
 - matplotlib (visualization routines)  
+- getpass (password management)
+- astropy (extra scientific routines)
+
+##
