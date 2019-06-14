@@ -32,4 +32,6 @@ Part 2: Reduction of ICESat-2 data files
 - getpass (password management)
 - astropy (extra scientific routines)
 
-##
+## Credits
+
+*The algorithms used in this tutorial are downscaled versions of a Python altimetry package, currently being devloped at JPL/Caltech, providing a range of algorithms for common tasks in altimetry data processing. It will soon become avalibale on GitHub as the `CapToolkit` for public usage.*
