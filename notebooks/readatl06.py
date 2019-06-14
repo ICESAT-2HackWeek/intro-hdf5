@@ -1,10 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""
-Created on Thu Apr 26 14:58:17 2018
-
-@author: nilssonj
-"""
 
 import re
 import sys
