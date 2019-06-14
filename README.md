@@ -2,7 +2,7 @@ Intro to HDF5 and ICESat-2 Data Files
 -------------------------------------
 
 Instructor: Fernando Paolo (paolofer@jpl.nasa.gov)  
-Institution: NASA-JPL/Caltech
+Institution: JPL/Caltech
 
 ## Tutorials:  
 
@@ -24,14 +24,14 @@ Part 2: Reduction of ICESat-2 data files
 - h5py (HDF5 handling)   
 - numpy (numeric routines)  
 - scipy (scientific routines)  
+- astropy (extra scientific routines)
 - pyproj (map projection routines)   
 - joblib (shared-memory parallelization)  
-- argparse (arguments parsing)  
-- glob (pathname pattern expansion)  
 - matplotlib (visualization routines)  
+- glob (pathname pattern expansion)  
 - getpass (password management)
-- astropy (extra scientific routines)
+- argparse (arguments parsing)  
 
 ## Credits
 
-*The algorithms used in this tutorial are downscaled versions of a Python altimetry package, currently being devloped at JPL/Caltech, providing a range of algorithms for common tasks in altimetry data processing. It will soon become avalibale on GitHub as the `CapToolkit` for public usage.*
+*The algorithms used in this tutorial are downscaled versions of a Python altimetry package, currently being devloped at JPL/Caltech. This package provides a range of algorithms for common tasks in altimetry data processing. It will soon become avalibale on GitHub as the `captoolkit` for public usage.*
