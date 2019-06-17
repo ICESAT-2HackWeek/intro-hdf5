@@ -11,9 +11,14 @@ import argparse
 import h5py
 import numpy as np
 from astropy.time import Time
-#from gdalconst import *
-#from osgeo import gdal, osr
 from scipy.ndimage import map_coordinates
+
+try:
+    from gdalconst import *
+    from osgeo import gdal, osr
+except:
+    print('No GDAL, proceeding without it!')
+
 
 def segDifferenceFilter(dh_fit_dx, h_li, tol=2):
 
@@ -184,11 +189,12 @@ parser = argparse.ArgumentParser(description=description)
 
 parser.add_argument(
         'ifiles', metavar='ifile', type=str, nargs='+',
-        help='path for ifile(s) to read (.h5).')
+        help='path for ifile(s) to read (.h5)')
 
 parser.add_argument(
-        'ofiles', metavar='ofile', type=str, nargs='+',
-        help='path for ofile(s) to save (.h5).')
+        '-o', metavar=('odir'), dest='odir', type=str, nargs=1,
+        help='path to output folder',
+        default=[None])
 
 parser.add_argument(
         '-f', metavar=('fmask'), dest='fmask', type=str, nargs=1,
@@ -216,8 +222,8 @@ parser.add_argument(
         default=[None],)
 
 parser.add_argument(
-        '-g', metavar=('granual'), dest='granual', type=str, nargs='+',
-        help='only select specific granuals',
+        '-g', metavar=('gran'), dest='gran', type=str, nargs='+',
+        help='only select specific granule(s)',
         default=[None],)
 
 # Parser argument to variable
@@ -225,19 +231,19 @@ args = parser.parse_args()
 
 # Read input from terminal
 ifiles = args.ifiles
-opath  = args.ofiles[0]
+opath_ = args.odir[0]
 bbox   = args.bbox
 njobs  = args.njobs[0]
 fmask  = args.fmask[0]
 proj   = args.proj[0]
 index  = args.index[0]
-gran   = args.granual
+gran   = args.gran
 
 # Get filelist of data to process
 #ifiles = list_files(ipath,endswith='.h5')
 
 # Beam namnes
-group = ['./gt1l','./gt1r','./gt2l','./gt2r','./gt3l','./gt3r']
+group = ['/gt1l','/gt1r','/gt2l','/gt2r','/gt3l','/gt3r']
 
 # Beam indicies
 beams = [1, 2, 3, 4, 5, 6]
@@ -245,8 +251,8 @@ beams = [1, 2, 3, 4, 5, 6]
 # Create beam index container
 orb_i = 0
 
-# Select the granuals
-gran = np.asarray(gran).astype(int)
+# Select the granules
+if gran[0]: gran = np.asarray(gran).astype(int)
 
 # Raster mask
 if fmask is not None:
@@ -270,14 +276,15 @@ if fmask is not None:
 # Loop trough and open files
 def main(ifile, n=''):
     
-    gran_str = ifile.split('_')[-3]
-    
-    n_str = len(gran_str)
-    
-    gran_num = int(gran_str[-2:n_str])
-    
-    if np.all(gran_num != gran):
-        return
+    if gran[0] is not None:
+        gran_str = ifile.split('_')[-3]
+        
+        n_str = len(gran_str)
+        
+        gran_num = int(gran_str[-2:n_str])
+        
+        if np.all(gran_num != gran):
+            return
     
     # Access global variable
     global orb_i
@@ -419,66 +426,37 @@ def main(ifile, n=''):
             orb = np.full(t_gps.shape, orb_i)
 
         # Construct output name and path
-        name, ext = os.path.splitext(os.path.basename(ifile))
-        ofile = os.path.join(opath, name +'_'+group[k][2:]+ ext)
+        ipath, fname = os.path.split(ifile)
+        name, ext = os.path.splitext(fname)
+        opath = opath_ if opath_ else ipath
+        ofile = os.path.join(opath, name +'_'+group[k][1:]+ ext)
                 
-        # Save track as ascending
-        if len(lat[i_asc]) > 1:
+        with h5py.File(ofile, 'w') as fa:
             
-            with h5py.File(ofile.replace('.h5', '_A.h5'), 'w') as fa:
+            # Save ascending vars
+            fa['orbit'] = orb
+            fa['lon'] = lon
+            fa['lat'] = lat
+            fa['h_elv'] = h_li
+            fa['s_elv'] = s_li
+            fa['t_year'] = t_li
+            fa['h_rb'] = h_rb
+            fa['s_fg'] = s_fg
+            fa['snr'] = snr
+            fa['q_flg'] = q_flag
+            fa['f_sn'] = f_sn
+            fa['t_sec'] = t_gps
+            fa['tide_load'] = tide_load
+            fa['tide_ocean'] = tide_ocean
+            fa['tide_pole'] = tide_pole
+            fa['tide_earth'] = tide_earth
+            fa['dac'] = dac
+            fa['rgt'] = rgt
+            fa['trk_type'] = i_asc
                 
-                # Save ascending vars
-                fa['orbit']      = orb[i_asc][:]
-                fa['lon']        = lon[i_asc][:]
-                fa['lat']        = lat[i_asc][:]
-                fa['h_elv']      = h_li[i_asc][:]
-                fa['s_elv']      = s_li[i_asc][:]
-                fa['t_year']     = t_li[i_asc][:]
-                fa['h_rb']       = h_rb[i_asc][:]
-                fa['s_fg']       = s_fg[i_asc][:]
-                fa['snr']        = snr[i_asc][:]
-                fa['q_flg']      = q_flag[i_asc][:]
-                fa['f_sn']       = f_sn[i_asc][:]
-                fa['t_sec']      = t_gps[i_asc][:]
-                fa['tide_load']  = tide_load[i_asc][:]
-                fa['tide_ocean'] = tide_ocean[i_asc][:]
-                fa['tide_pole']  = tide_pole[i_asc][:]
-                fa['tide_earth'] = tide_earth[i_asc][:]
-                fa['dac']        = dac[i_asc][:]
-                fa['rgt']        = rgt[i_asc][:]
-                
-                ostr = '_A.h5'
-
-        # Save track as desending
-        if len(lat[i_des]) > 1:
-            
-            with h5py.File(ofile.replace('.h5', '_D.h5'), 'w') as fd:
-                
-                # Save descending vars
-                fd['orbit']      = orb[i_des][:]
-                fd['lon']        = lon[i_des][:]
-                fd['lat']        = lat[i_des][:]
-                fd['h_elv']      = h_li[i_des][:]
-                fd['s_li']       = s_li[i_des][:]
-                fd['t_year']     = t_li[i_des][:]
-                fd['h_rb']       = h_rb[i_des][:]
-                fd['s_fg']       = s_fg[i_des][:]
-                fd['snr']        = snr[i_des][:]
-                fd['q_flg']      = q_flag[i_des][:]
-                fd['f_sn']       = f_sn[i_des][:]
-                fd['t_sec']      = t_gps[i_des][:]
-                fd['tide_load']  = tide_load[i_des][:]
-                fd['tide_ocean'] = tide_ocean[i_des][:]
-                fd['tide_pole']  = tide_pole[i_des][:]
-                fd['tide_earth'] = tide_earth[i_des][:]
-                fd['dac']        = dac[i_des][:]
-                fd['rgt']        = rgt[i_des][:]
-                
-                ostr = '_D.h5'
-
         # Name of file
         try:
-            print(ofile.replace('.h5', ostr))
+            print('out ->', ofile)
         except:
             print('Not processed!')
                 
