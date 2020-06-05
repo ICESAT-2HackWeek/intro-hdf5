@@ -32,7 +32,7 @@ Monday June 15: Hack-day #1 (10:30 - 11:30 AM)
 
 ## Credit
 
-*The algorithms used in this tutorial are downscaled versions of an open-source Python altimetry package, currently being developed at JPL/Caltech: [captoolkit](https://github.com/fspaolo/captoolkit). This package provides a range of algorithms for common tasks in altimetry data processing. We also use the convenient data download interface from [icepyx](https://github.com/icesat2py/icepyx). 
+The algorithms used in this tutorial are downscaled versions of an open-source Python altimetry package, currently being developed at JPL/Caltech: [captoolkit](https://github.com/fspaolo/captoolkit). This package provides a range of algorithms for common tasks in altimetry data processing. We also use the convenient data download interface from [icepyx](https://github.com/icesat2py/icepyx). 
 
 ## License
 
