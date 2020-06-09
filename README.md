@@ -22,13 +22,23 @@ Part 2: Reduction of ICESat-2 data files
 
 Monday June 15: Hack-day #1 (10:30 - 11:30 AM)
 
-## Accessing the Pangeo Hub 
+## Setup
 
-[https://icesat-2.hackweek.io/hub/login](https://icesat-2.hackweek.io/hub/login)
+1. Login to JupyterHub:
 
-## Cloning the tutorial
+    https://icesat-2.hackweek.io/hub/login
 
-    git clone https://github.com/ICESAT-2HackWeek/intro-hdf5.git
+2. Open a Terminal:
+
+    Find Terminal icon at the bottom (or click the `+` sign on the top left)
+
+3. Clone GitHub repo (type on the terminal):
+
+    `git clone https://github.com/ICESAT-2HackWeek/intro-hdf5`
+
+## Questions
+
+Post your question in the [#questions](https://icesat2hackweek.slack.com/archives/C014V14KA3G) channel on Slack
 
 ## Credit
 
