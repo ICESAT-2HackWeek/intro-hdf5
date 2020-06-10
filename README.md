@@ -1,7 +1,6 @@
 # Intro to HDF5 and ICESat-2 Data Files
 
 Instructor: Fernando Paolo (paolofer@jpl.nasa.gov)  
-Institution: JPL/Caltech
 
 ## Tutorials:  
 
@@ -12,6 +11,7 @@ Part 2: Reduction of ICESat-2 data files
 
 - Familiarize with HDF5 data model  
 - Familiarize with HDF5 basic tools  
+- Have a quick overview of cloud options  
 - Download IS2 files according region of interest  
 - Extract variables of interest and filter in time and space  
 - Prepare data for large-scale processing  
