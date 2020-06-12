@@ -369,7 +369,7 @@ if bfile is not None:
 
 
 def main(ifile, n=""):
-    print(ifile)
+    print('XXXXXXX', ifile)                               # FIXME: <<<<<<<<<<<<<<<<<<<<<<<<
 
     # Get index of where filename starts
     nidx = ifile.rfind("/") + 1
