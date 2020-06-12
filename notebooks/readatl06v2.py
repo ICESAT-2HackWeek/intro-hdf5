@@ -683,6 +683,7 @@ def main(ifile, n=""):
 
 if njobs == 1:
 
+    print(ifiles[:5])
     print("running in serial ...")
     [main(f) for f in ifiles]
 
