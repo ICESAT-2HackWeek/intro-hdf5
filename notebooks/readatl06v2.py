@@ -226,7 +226,7 @@ def bilinear2d(xd, yd, data, xq, yq, **kwargs):
 
 
 # Output description of solution
-description = "Program for reading ICESat ATL06 data."
+description = "Read ICESat-2 ATL06 data files."
 
 # Define command-line arguments
 parser = argparse.ArgumentParser(description=description)
@@ -236,14 +236,16 @@ parser.add_argument(
     metavar="ifile",
     type=str,
     nargs="+",
-    help="path for ifile(s) to read (.h5).",
+    help="input files to read (.h5).",
 )
 parser.add_argument(
-    "ofiles",
-    metavar="ofile",
-    type=str,
-    nargs="+",
-    help="path for ofile(s) to save (.h5).",
+        '-o',
+        metavar=('outdir'),
+        dest='outdir',
+        type=str,
+        nargs=1,
+        help='path to output folder',
+        default=[""]
 )
 parser.add_argument(
     "-f",
@@ -251,7 +253,7 @@ parser.add_argument(
     dest="fmask",
     type=str,
     nargs=1,
-    help="name of raster file mask ('.tif' or 'hdf5')",
+    help="raster mask with 0s and 1s ('.tif' or '.h5')",
     default=[None],
 )
 parser.add_argument(
@@ -287,7 +289,7 @@ parser.add_argument(
     dest="proj",
     type=str,
     nargs=1,
-    help=("proj for mask: EPSG number (AnIS=3031, GrIS=3413)"),
+    help=("projection for mask (EPSG number)"),
     default=["3031"],
 )
 parser.add_argument(
@@ -296,16 +298,16 @@ parser.add_argument(
     dest="index",
     type=int,
     nargs=1,
-    help=("unique mission index (appended to original)"),
+    help=("unique mission id (appended to original)"),
     default=[None],
 )
 parser.add_argument(
     "-g",
-    metavar=("granual"),
-    dest="granual",
+    metavar=("granule"),
+    dest="granule",
     type=str,
     nargs="+",
-    help=("select specific granuals"),
+    help=("select specific granules"),
     default=None,
 )
 
@@ -314,13 +316,13 @@ args = parser.parse_args()
 
 # Read input from terminal
 ifiles = args.ifiles
-opath = args.ofiles[0]
+opath = args.outdir[0]
 bbox = args.bbox
 njobs = args.njobs[0]
 fmask = args.fmask[0]
 proj = args.proj[0]
 index = args.index[0]
-gran = args.granual
+gran = args.granule
 bfile = args.efile[0]
 
 # Beam names
