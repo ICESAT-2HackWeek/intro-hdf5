@@ -432,7 +432,7 @@ def main(ifile, n=""):
                 tide_ocean = fi[group[k] + "/land_ice_segments/geophysical/tide_ocean"][:]
                 tide_pole = fi[group[k] + "/land_ice_segments/geophysical/tide_pole"][:]
 
-            except ValueError:
+            except:
 
                 print(("skeeping group:", group[k]))
                 print(("in file:", ifile))
