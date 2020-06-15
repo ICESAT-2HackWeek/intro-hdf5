@@ -437,7 +437,7 @@ def main(ifile, n=""):
 
             except:
 
-                print(("skeeping group:", group[k]))
+                print("skeeping group:", group[k])
                 print(ifile)
                 continue
 
