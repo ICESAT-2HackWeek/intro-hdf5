@@ -47,6 +47,9 @@ from astropy.time import Time
 from gdalconst import GA_ReadOnly
 from scipy.ndimage import map_coordinates
 
+import warnings
+warnings.filterwarnings("ignore")
+
 
 def segment_diff_filter(dh_fit_dx, h_li, tol=2):
     """ Coded by Ben Smith @ University of Washington """
