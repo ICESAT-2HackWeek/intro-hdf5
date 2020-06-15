@@ -641,10 +641,10 @@ def main(ifile, n=""):
 
                 ostr = "_D.h5"
 
-        try:
-            print((ofile.replace(".h5", ostr)))
-        except:
-            print("Not processed!")
+        # try:
+        #     print((ofile.replace(".h5", ostr)))
+        # except:
+        #     print("Not processed!")
 
         # Update orbit number
         orb_i += 1
