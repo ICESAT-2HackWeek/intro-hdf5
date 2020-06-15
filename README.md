@@ -16,7 +16,8 @@ Part 2: Reduction of ICESat-2 data files
 - Extract variables of interest and filter in time and space  
 - Prepare data for large-scale processing  
 - Learn simple/generic data parallelization strategy  
-- Inspect data files from the command line and with plots  
+- Inspect data files from the command line  
+- Plot millions of points efficiently
 
 ## Schedule
 
