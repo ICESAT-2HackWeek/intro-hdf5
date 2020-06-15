@@ -643,7 +643,7 @@ def main(ifile, n=""):
 
         try:
             print((ofile.replace(".h5", ostr)))
-        except IOError:
+        except:
             print("Not processed!")
 
         # Update orbit number
