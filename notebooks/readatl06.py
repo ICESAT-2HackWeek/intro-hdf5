@@ -438,7 +438,7 @@ def main(ifile, n=""):
             except:
 
                 print(("skeeping group:", group[k]))
-                print(("in file:", ifile))
+                print(ifile)
                 continue
 
         # Set beam type for file
